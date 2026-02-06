@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Focus Timer</title>
+
+<style>
+body{
+  background:#0f172a;
+  color:white;
+  font-family:Arial;
+  text-align:center;
+}
+
+.box{
+  background:#1e293b;
+  width:320px;
+  margin:40px auto;
+  padding:20px;
+  border-radius:12px;
+}
+
+button{
+  margin:5px;
+  padding:8px 15px;
+  cursor:pointer;
+}
+</style>
+
+</head>
+
+<body>
+
+<h1>My Focus Timer</h1>
+
+<div class="box">
+<h2 id="time">25:00</h2>
+
+<button onclick="start(25)">25 Min</button>
+<button onclick="start(40)">40 Min</button>
+<button onclick="reset()">Reset</button>
+</div>
+
+<script>
+let sec = 1500;
+let t;
+
+function start(m){
+  clearInterval(t);
+  sec = m*60;
+  t = setInterval(run,1000);
+}
+
+function run(){
+  sec--;
+
+  let m = Math.floor(sec/60);
+  let s = sec%60;
+
+  document.getElementById("time").innerHTML =
+  m + ":" + (s<10 ? "0"+s : s);
+
+  if(sec<=0){
+    alert("Session Complete!");
+    clearInterval(t);
+  }
+}
+
+function reset(){
+  clearInterval(t);
+  document.getElementById("time").innerHTML="25:00";
+}
+</script>
+
+</body>
+</html>
