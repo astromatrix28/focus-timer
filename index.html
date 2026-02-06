@@ -1,28 +1,32 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Focus Timer</title>
+<title>Focus</title>
 
 <style>
 body{
-  background:#0f172a;
-  color:white;
-  font-family:Arial;
-  text-align:center;
+background:#0f172a;
+color:white;
+font-family:system-ui;
+text-align:center;
 }
 
-.box{
-  background:#1e293b;
-  width:320px;
-  margin:40px auto;
-  padding:20px;
-  border-radius:12px;
+.card{
+background:#111827;
+padding:12px;
+margin:10px;
+border-radius:10px;
 }
 
 button{
-  margin:5px;
-  padding:8px 15px;
-  cursor:pointer;
+margin:4px;
+padding:6px;
+}
+
+.bar{
+height:8px;
+background:#1e3a8a;
+margin:4px;
 }
 </style>
 
@@ -30,45 +34,218 @@ button{
 
 <body>
 
-<h1>My Focus Timer</h1>
+<h2 id="clock"></h2>
 
-<div class="box">
-<h2 id="time">25:00</h2>
+<div class="card">
+<h2 id="t">25:00</h2>
 
-<button onclick="start(25)">25 Min</button>
-<button onclick="start(40)">40 Min</button>
+<button onclick="start(25)">25</button>
+<button onclick="start(40)">40</button>
 <button onclick="reset()">Reset</button>
 </div>
 
-<script>
-let sec = 1500;
-let t;
+<div class="card">
+<button onclick="sub='Physics'">Physics</button>
+<button onclick="sub='Chem'">Chem</button>
+<button onclick="sub='Math'">Math</button>
+</div>
 
-function start(m){
-  clearInterval(t);
-  sec = m*60;
-  t = setInterval(run,1000);
+<div class="card">
+
+<input id="task">
+<input id="tag" placeholder="tag">
+
+<button onclick="add()">Add</button>
+
+<div id="list"></div>
+
+</div>
+
+<div class="card">
+<h3>Today</h3>
+
+<div id="prog" class="bar"></div>
+
+<div id="min"></div>
+</div>
+
+<div class="card">
+<h3>Weekly</h3>
+
+<canvas id="g" width="320" height="160"></canvas>
+
+<div>Mon Tue Wed Thu Fri Sat Sun</div>
+</div>
+
+<script>
+
+let time=1500;
+let run=0;
+let sub="Physics";
+
+function set(k,v){localStorage[k]=JSON.stringify(v)}
+function get(k,d){return JSON.parse(localStorage[k]||d)}
+
+function clock(){
+clock.innerHTML=new Date().toLocaleTimeString()
 }
 
-function run(){
-  sec--;
+setInterval(clock,1000);
 
-  let m = Math.floor(sec/60);
-  let s = sec%60;
-
-  document.getElementById("time").innerHTML =
-  m + ":" + (s<10 ? "0"+s : s);
-
-  if(sec<=0){
-    alert("Session Complete!");
-    clearInterval(t);
-  }
+function start(m){
+time=m*60;
+run=1;
+tick();
 }
 
 function reset(){
-  clearInterval(t);
-  document.getElementById("time").innerHTML="25:00";
+run=0;
+time=1500;
+t.innerHTML="25:00";
 }
+
+function tick(){
+
+if(!run)return;
+
+let m=Math.floor(time/60);
+let s=time%60;
+
+t.innerHTML=m+":"+s.toString().padStart(2,0);
+
+time--;
+
+if(time>=0)setTimeout(tick,1000);
+
+if(time==0)end();
+
+}
+
+function end(){
+
+let d=get("day",0)+1;
+set("day",d);
+
+let w=get("week","{}");
+
+let day=new Date().getDay();
+
+w[day]=(w[day]||0)+1;
+
+set("week",w);
+
+auto();
+
+draw();
+
+}
+
+function auto(){
+
+let d=get("day",0);
+
+if(d%4==0)alert("Long Break 10 min");
+else alert("Break 5 min");
+
+}
+
+function add(){
+
+let a=get("task","[]");
+
+a.push({
+t:task.value,
+g:tag.value,
+s:sub
+});
+
+set("task",a);
+
+task.value="";
+tag.value="";
+
+show();
+
+}
+
+function show(){
+
+let a=get("task","[]");
+
+list.innerHTML="";
+
+a.map((x,i)=>{
+
+list.innerHTML+=`
+
+<div class=card>
+
+${x.t} - ${x.g} - ${x.s}
+
+<button onclick=del(${i})>x</button>
+
+</div>`;
+
+});
+
+}
+
+function del(i){
+
+let a=get("task","[]");
+
+a.splice(i,1);
+
+set("task",a);
+
+show();
+
+}
+
+function draw(){
+
+let w=get("week","{}");
+
+let c=document.getElementById("g");
+
+let x=c.getContext("2d");
+
+x.clearRect(0,0,320,160);
+
+let max=0;
+
+for(let i=0;i<7;i++)
+if((w[i]||0)>max)max=w[i];
+
+if(max==0)max=1;
+
+for(let i=0;i<7;i++){
+
+let v=w[i]||0;
+
+let h=(v/max)*120;
+
+x.fillStyle="#1e3a8a";
+
+x.fillRect(20+i*40,140-h,24,h);
+
+x.fillStyle="white";
+
+x.fillText(v,20+i*40,150);
+
+}
+
+let d=get("day",0);
+
+min.innerHTML=d+" / 360 min";
+
+prog.style.width=(d/360*100)+"%";
+
+}
+
+show();
+draw();
+
 </script>
 
 </body>
